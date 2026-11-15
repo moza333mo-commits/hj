@@ -1,0 +1,72 @@
+name: Build Audio Route Tester APK
+
+on:
+  push:
+    branches: [ "main", "master", "**" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Compile & Package Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+          cache-read-only: false
+
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
+
+      - name: Generate Gradle Wrapper (if missing jar)
+        run: |
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+            gradle wrapper --gradle-version 8.7
+          fi
+
+      - name: Run Android Lint & Unit Checks
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Build Debug & Release Unsigned APKs
+        run: ./gradlew assembleDebug assembleRelease --stacktrace
+
+      - name: Rename and Prepare APK Artifacts
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/AudioRouteTester-v1.0.0-debug.apk
+          if [ -f "app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
+            cp app/build/outputs/apk/release/app-release-unsigned.apk dist/AudioRouteTester-v1.0.0-release-unsigned.apk
+          fi
+          ls -lh dist/
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioRouteTester-Debug-APK
+          path: dist/AudioRouteTester-v1.0.0-debug.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload All Build Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioRouteTester-All-APKs
+          path: dist/*.apk
+          if-no-files-found: warn
+          retention-days: 90
