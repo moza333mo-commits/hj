@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Audio Route Tester Pro</string>
+    <string name="tile_label">تثبيت مايك الجكة</string>
+    <string name="notif_channel_name">خدمة فحص وتوجيه مسار الصوت</string>
+    <string name="notif_title">فاحص وموجه مسارات الصوت نشط</string>
+    <string name="notif_desc">يراقب مسار الميكروفون والسماعة لحظياً ويتحقق من التوجيه الفعلي</string>
+</resources>
